@@ -13,17 +13,22 @@ puts "\n== Seeding hotel supply catalog =="
 # ============================================================
 # Store
 # ============================================================
-store = Spree::Store.find_by(code: "atrium-mock") || Spree::Store.first
-store.update!(
-  name:               "Atrium Mock Supplier Portal",
-  url:                ENV.fetch("RENDER_EXTERNAL_URL", "localhost:3000"),
-  mail_from_address:  "orders@mock-supplier.dev",
-  default_currency:   "CAD",
-  default_locale:     "en",
+store_attrs = {
+  name:                 "Atrium Mock Supplier Portal",
+  url:                  ENV.fetch("RENDER_EXTERNAL_URL", "localhost:3000"),
+  mail_from_address:    "orders@mock-supplier.dev",
+  default_currency:     "CAD",
+  default_locale:       "en",
   supported_currencies: "CAD",
-  supported_locales:  "en",
-  code:               "atrium-mock"
-)
+  supported_locales:    "en",
+  default:              true
+}
+store = Spree::Store.find_by(code: "atrium-mock") || Spree::Store.first
+if store
+  store.update!(store_attrs.merge(code: "atrium-mock"))
+else
+  store = Spree::Store.create!(store_attrs.merge(code: "atrium-mock"))
+end
 
 # ============================================================
 # Infrastructure
@@ -34,7 +39,7 @@ tax_category      = Spree::TaxCategory.find_or_create_by!(name: "Default")
 # ============================================================
 # Taxonomy / Categories
 # ============================================================
-taxonomy = Spree::Taxonomy.find_or_create_by!(name: "Categories")
+taxonomy = Spree::Taxonomy.find_or_create_by!(name: "Categories", store: store)
 root     = taxonomy.root
 
 def taxon(parent, name)
