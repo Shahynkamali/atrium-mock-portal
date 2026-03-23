@@ -8,6 +8,11 @@
 # Step 1: Core Spree infrastructure (zones, countries, currencies, admin user)
 Spree::Core::Engine.load_seed if defined?(Spree::Core)
 
+# Suppress Spree event callbacks during seeding (they enqueue Sidekiq jobs
+# that aren't needed during build and slow down the seed significantly).
+Spree::Product.skip_callback(:commit, :after, :fire_event) rescue nil
+Spree::Variant.skip_callback(:commit, :after, :fire_event) rescue nil
+
 puts "\n== Seeding hotel supply catalog =="
 
 # ============================================================
