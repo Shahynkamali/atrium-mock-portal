@@ -112,10 +112,10 @@ def create_product(name:, slug:, sku:, description:, price:, taxon:,
   product.taxons << taxon unless product.taxons.include?(taxon)
   product.stores << store unless product.stores.include?(store)
 
-  # Master variant — always required
+  # Master variant — set price FIRST (cleans up nil USD prices that block validation)
   master = product.master
-  master.update!(sku: sku)
   set_variant_price(master, price)
+  master.update!(sku: sku)
   master.stock_items.each { |si| si.set_count_on_hand(500) }
 
   if variants.any? && option_type
