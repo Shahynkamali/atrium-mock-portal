@@ -41,7 +41,7 @@ Rails.application.routes.draw do
   get    "catalog"            => "storefront#catalog"
   get    "products/:id"       => "storefront#show_product"
   post   "cart"               => "storefront#add_to_cart"
-  delete "cart/:sku"          => "storefront#remove_from_cart"
+  post   "cart/:sku/remove"   => "storefront#remove_from_cart"
   get    "cart"               => "storefront#view_cart"
   get    "checkout"           => "storefront#checkout"
   post   "checkout"           => "storefront#submit_checkout"

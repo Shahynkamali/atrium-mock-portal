@@ -11,6 +11,12 @@ Spree::Core::Engine.load_seed if defined?(Spree::Core)
 # Silence Sidekiq job enqueuing during seed (worker not running on free tier)
 Rails.application.config.active_job.queue_adapter = :test
 
+# Clean up stale nil-amount prices from previous partial seed runs.
+# Spree 5 auto-creates USD prices with nil amount on every variant — these
+# block any subsequent save/update with "Prices amount is not a number".
+stale = Spree::Price.where(amount: nil).delete_all
+puts "  Cleaned up #{stale} stale nil-amount prices" if stale.positive?
+
 puts "\n== Seeding hotel supply catalog =="
 
 # ============================================================
@@ -83,12 +89,10 @@ end
 # Helper
 # ============================================================
 def set_variant_price(variant, amount)
-  # Spree auto-creates a USD price with nil amount — delete it
-  variant.prices.where(amount: nil).delete_all
-  variant.prices.where.not(currency: "CAD").delete_all
-  p = variant.prices.find_or_initialize_by(currency: "CAD")
-  p.amount = amount
-  p.save!
+  # Nuclear: delete ALL prices (including auto-created USD with nil amount),
+  # then create a single CAD price directly to avoid triggering variant callbacks.
+  variant.prices.delete_all
+  Spree::Price.create!(variant_id: variant.id, currency: "CAD", amount: amount)
 end
 
 def create_product(name:, slug:, sku:, description:, price:, taxon:,
@@ -112,10 +116,10 @@ def create_product(name:, slug:, sku:, description:, price:, taxon:,
   product.taxons << taxon unless product.taxons.include?(taxon)
   product.stores << store unless product.stores.include?(store)
 
-  # Master variant — set price FIRST (cleans up nil USD prices that block validation)
+  # Master variant — use update_column to skip Spree callbacks that recreate nil USD prices
   master = product.master
+  master.update_column(:sku, sku)
   set_variant_price(master, price)
-  master.update!(sku: sku)
   master.stock_items.each { |si| si.set_count_on_hand(500) }
 
   if variants.any? && option_type

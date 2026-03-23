@@ -24,7 +24,7 @@
             </td>
             <td class="text-right">$<%= "%.2f" % (item[:price_cents] * item[:qty] / 100.0) %></td>
             <td class="text-center">
-              <%= form_tag("/cart/#{item[:sku]}", method: :delete, style: "display:inline") do %>
+              <%= form_tag("/cart/#{item[:sku]}/remove", method: :post, style: "display:inline") do %>
                 <button type="submit" class="btn btn-danger btn-sm">Remove</button>
               <% end %>
             </td>
