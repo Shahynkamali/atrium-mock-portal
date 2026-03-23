@@ -33,17 +33,19 @@ Rails.application.routes.draw do
   end
 
   # ── Storefront (customer-facing portal for HSI connector testing) ──
-  get    "login"              => "storefront#login",           as: :login
+  # No `as:` helpers — Spree's Devise routes claim those names.
+  # The connector navigates by URL, not Rails path helpers.
+  get    "login"              => "storefront#login"
   post   "login"              => "storefront#do_login"
-  get    "logout"             => "storefront#logout",          as: :logout
-  get    "catalog"            => "storefront#catalog",         as: :catalog
-  get    "products/:id"       => "storefront#show_product",    as: :product
+  get    "logout"             => "storefront#logout"
+  get    "catalog"            => "storefront#catalog"
+  get    "products/:id"       => "storefront#show_product"
   post   "cart"               => "storefront#add_to_cart"
   delete "cart/:sku"          => "storefront#remove_from_cart"
-  get    "cart"               => "storefront#view_cart",       as: :cart
+  get    "cart"               => "storefront#view_cart"
   get    "checkout"           => "storefront#checkout"
   post   "checkout"           => "storefront#submit_checkout"
-  get    "order/confirmation" => "storefront#confirmation",    as: :confirmation
+  get    "order/confirmation" => "storefront#confirmation"
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.

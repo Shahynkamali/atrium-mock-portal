@@ -28,7 +28,7 @@ class StorefrontController < ApplicationController
     user = Spree::User.find_by(email: email)
     if user&.valid_password?(password)
       session[:user_id] = user.id
-      redirect_to catalog_path
+      redirect_to "/catalog"
     else
       flash.now[:error] = "Invalid email or password"
       render :login, status: :unprocessable_entity
@@ -37,7 +37,7 @@ class StorefrontController < ApplicationController
 
   def logout
     session.delete(:user_id)
-    redirect_to login_path
+    redirect_to "/login"
   end
 
   # ── Catalog ───────────────────────────────────────────────────
@@ -71,7 +71,7 @@ class StorefrontController < ApplicationController
     variant = Spree::Variant.find_by(sku: sku)
     unless variant
       flash[:error] = "Product not found"
-      redirect_to catalog_path and return
+      redirect_to "/catalog" and return
     end
 
     if variant.stock_items.sum(:count_on_hand) <= 0
@@ -79,12 +79,12 @@ class StorefrontController < ApplicationController
     end
 
     cart[sku] = (cart[sku] || 0) + qty
-    redirect_to cart_path
+    redirect_to "/cart"
   end
 
   def remove_from_cart
     cart.delete(params[:sku])
-    redirect_to cart_path
+    redirect_to "/cart"
   end
 
   def view_cart
@@ -100,12 +100,12 @@ class StorefrontController < ApplicationController
 
   def submit_checkout
     if cart.empty?
-      redirect_to cart_path and return
+      redirect_to "/cart" and return
     end
 
     session[:last_order_number] = "ORD-SPREE-#{Time.current.strftime('%H%M%S%L')}"
     session[:cart] = {}
-    redirect_to confirmation_path
+    redirect_to "/order/confirmation"
   end
 
   def confirmation
@@ -122,7 +122,7 @@ class StorefrontController < ApplicationController
   def require_auth!
     return if current_user
 
-    redirect_to login_path
+    redirect_to "/login"
   end
 
   def cart
