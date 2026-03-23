@@ -104,13 +104,14 @@ def create_product(name:, slug:, sku:, description:, price:, taxon:,
   product.stores << store unless product.stores.include?(store)
 
   # Master variant — always required
-  product.master.sku = sku
-  product.master.price = price
-  product.master.save!
-  product.master.stock_items.each { |si| si.set_count_on_hand(500) }
+  master = product.master
+  master.update!(sku: sku)
+  master.prices.find_or_create_by!(currency: "CAD") { |p| p.amount = price }
+  master.prices.find_by(currency: "CAD")&.update!(amount: price)
+  master.stock_items.each { |si| si.set_count_on_hand(500) }
 
   if variants.any? && option_type
-    product.option_types << option_type
+    product.option_types << option_type unless product.option_types.include?(option_type)
 
     variants.each do |v|
       ov = option_value(option_type, v[:label])
@@ -119,8 +120,8 @@ def create_product(name:, slug:, sku:, description:, price:, taxon:,
         track_inventory: true
       )
       var.option_values << ov
-      var.price = v[:price]
-      var.save!
+      var.prices.find_or_create_by!(currency: "CAD") { |p| p.amount = v[:price] }
+      var.prices.find_by(currency: "CAD")&.update!(amount: v[:price])
       var.stock_items.each { |si| si.set_count_on_hand(v.fetch(:stock, 500)) }
     end
   end
