@@ -130,7 +130,11 @@ def create_product(name:, slug:, sku:, description:, price:, taxon:,
     variants.each do |v|
       ov = option_value(option_type, v[:label])
       var = product.variants.create!(sku: v[:sku], track_inventory: true)
-      var.option_values << ov
+      # Direct insert to avoid OptionValue validation ("variants can't be blank")
+      ActiveRecord::Base.connection.execute(
+        "INSERT INTO spree_option_value_variants (variant_id, option_value_id) " \
+        "VALUES (#{var.id}, #{ov.id}) ON CONFLICT DO NOTHING"
+      )
       set_variant_price(var, v[:price])
       var.stock_items.each { |si| si.set_count_on_hand(v.fetch(:stock, 500)) }
     end
