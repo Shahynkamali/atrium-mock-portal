@@ -78,11 +78,13 @@ count_opt = Spree::OptionType.find_or_create_by!(name: "count", presentation: "C
 grade_opt = Spree::OptionType.find_or_create_by!(name: "grade", presentation: "Grade")
 
 def option_value(opt_type, val)
-  Spree::OptionValue.find_or_create_by!(
+  ov = Spree::OptionValue.find_or_initialize_by(
     name:         val.downcase.tr(" /", "_"),
-    presentation: val,
     option_type:  opt_type
   )
+  ov.presentation = val
+  ov.save!(validate: false) if ov.new_record?
+  ov
 end
 
 # ============================================================
