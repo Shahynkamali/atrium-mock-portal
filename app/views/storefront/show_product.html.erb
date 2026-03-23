@@ -1,0 +1,57 @@
+<h2 style="margin-bottom: 4px;"><%= @product.name %></h2>
+<p class="text-muted" style="margin-bottom: 20px;">
+  <%= @product.taxons.first&.name || "Uncategorized" %> &bull;
+  Base SKU: <code><%= @product.master.sku %></code>
+</p>
+
+<div class="card">
+  <h3 style="margin-bottom: 12px;">Add to Cart</h3>
+  <%= form_tag("/cart", method: :post, id: "add-to-cart-form") do %>
+    <div class="form-group">
+      <label for="sku">Select Variant</label>
+      <select name="sku" id="sku" required>
+        <% @product.variants_including_master.each do |variant| %>
+          <% price_cents = (variant.price_in("CAD")&.amount.to_f * 100).round %>
+          <% in_stock = variant.stock_items.sum(:count_on_hand) > 0 %>
+          <option value="<%= variant.sku %>"
+                  data-price-cents="<%= price_cents %>"
+                  data-sku="<%= variant.sku %>"
+                  <%= "disabled" unless in_stock %>>
+            <%= variant.options_text.presence || variant.sku %> —
+            $<%= "%.2f" % (price_cents / 100.0) %>
+            <%= "(Out of Stock)" unless in_stock %>
+          </option>
+        <% end %>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="qty">Quantity</label>
+      <input type="number" name="qty" id="qty" value="1" min="1" max="999" style="max-width: 120px;">
+    </div>
+    <button type="submit" class="btn btn-primary" id="add-to-cart-btn" data-action="add-to-cart">
+      Add to Cart
+    </button>
+    <a href="/cart" class="btn" style="margin-left: 8px;">View Cart</a>
+  <% end %>
+</div>
+
+<div class="card" style="margin-top: 16px;">
+  <h3 style="margin-bottom: 8px;">All Variants</h3>
+  <table>
+    <thead><tr><th>SKU</th><th>Option</th><th class="text-right">Price</th><th>Stock</th></tr></thead>
+    <tbody>
+      <% @product.variants_including_master.each do |variant| %>
+        <% price_cents = (variant.price_in("CAD")&.amount.to_f * 100).round %>
+        <% stock = variant.stock_items.sum(:count_on_hand) %>
+        <tr>
+          <td><code><%= variant.sku %></code></td>
+          <td><%= variant.options_text.presence || "Default" %></td>
+          <td class="text-right product-price" data-price-cents="<%= price_cents %>">$<%= "%.2f" % (price_cents / 100.0) %></td>
+          <td><%= stock > 0 ? "#{stock} in stock" : "<span style='color:red'>Out of Stock</span>".html_safe %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+<p style="margin-top: 12px;"><a href="/catalog">&laquo; Back to Catalog</a></p>

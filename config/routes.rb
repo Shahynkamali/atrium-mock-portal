@@ -32,9 +32,22 @@ Rails.application.routes.draw do
     mount Sidekiq::Web => "/sidekiq" # access it at http://localhost:3000/sidekiq
   end
 
+  # ── Storefront (customer-facing portal for HSI connector testing) ──
+  get    "login"              => "storefront#login",           as: :login
+  post   "login"              => "storefront#do_login"
+  get    "logout"             => "storefront#logout",          as: :logout
+  get    "catalog"            => "storefront#catalog",         as: :catalog
+  get    "products/:id"       => "storefront#show_product",    as: :product
+  post   "cart"               => "storefront#add_to_cart"
+  delete "cart/:sku"          => "storefront#remove_from_cart"
+  get    "cart"               => "storefront#view_cart",       as: :cart
+  get    "checkout"           => "storefront#checkout"
+  post   "checkout"           => "storefront#submit_checkout"
+  get    "order/confirmation" => "storefront#confirmation",    as: :confirmation
+
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.
   get "up" => "rails/health#show", as: :rails_health_check
 
-  root to: redirect('/admin')
+  root to: redirect('/catalog')
 end

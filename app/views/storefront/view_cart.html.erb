@@ -1,0 +1,49 @@
+<h2 style="margin-bottom: 20px;">Shopping Cart</h2>
+
+<% if @cart_items.empty? %>
+  <div class="card">
+    <p>Your cart is empty. <a href="/catalog">Browse the catalog</a> to add items.</p>
+  </div>
+<% else %>
+  <div class="card">
+    <table>
+      <thead>
+        <tr><th>Product</th><th>SKU</th><th class="text-center">Qty</th><th class="text-right">Unit Price</th><th class="text-right">Subtotal</th><th></th></tr>
+      </thead>
+      <tbody>
+        <% @cart_items.each do |item| %>
+          <tr class="cart-item" data-sku="<%= item[:sku] %>">
+            <td>
+              <a href="/products/<%= item[:product].id %>"><%= item[:product].name %></a>
+              <br><span class="text-muted"><%= item[:label] %></span>
+            </td>
+            <td><code><%= item[:sku] %></code></td>
+            <td class="text-center"><%= item[:qty] %></td>
+            <td class="text-right product-price" data-price-cents="<%= item[:price_cents] %>">
+              $<%= "%.2f" % (item[:price_cents] / 100.0) %>
+            </td>
+            <td class="text-right">$<%= "%.2f" % (item[:price_cents] * item[:qty] / 100.0) %></td>
+            <td class="text-center">
+              <%= form_tag("/cart/#{item[:sku]}", method: :delete, style: "display:inline") do %>
+                <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="4" class="text-right"><strong>Total:</strong></td>
+          <td class="text-right cart-total" data-total-cents="<%= @total_cents %>">
+            <strong>$<%= "%.2f" % (@total_cents / 100.0) %></strong>
+          </td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+  <div style="display: flex; justify-content: space-between; margin-top: 12px;">
+    <a href="/catalog" class="btn">Continue Shopping</a>
+    <a href="/checkout" class="btn btn-primary" id="proceed-to-checkout">Proceed to Checkout</a>
+  </div>
+<% end %>

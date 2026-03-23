@@ -1,0 +1,58 @@
+<div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 20px;">
+  <div>
+    <h2 style="margin-bottom: 20px;">Checkout</h2>
+    <div class="card">
+      <h3 style="margin-bottom: 12px;">Delivery Details</h3>
+      <%= form_tag("/checkout", method: :post, id: "checkout-form") do %>
+        <div class="form-group">
+          <label for="delivery_name">Contact Name</label>
+          <input type="text" name="delivery_name" id="delivery_name" placeholder="Hotel purchasing manager" required>
+        </div>
+        <div class="form-group">
+          <label for="delivery_address">Street Address</label>
+          <input type="text" name="delivery_address" id="delivery_address" placeholder="123 Hotel Drive" required>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label for="delivery_city">City</label>
+            <input type="text" name="delivery_city" id="delivery_city" placeholder="Toronto" required>
+          </div>
+          <div class="form-group">
+            <label for="delivery_postal">Postal Code</label>
+            <input type="text" name="delivery_postal" id="delivery_postal" placeholder="M5V 3A8" required>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-success" id="place-order" style="width:100%; margin-top: 8px; padding: 12px; font-size: 16px;">
+          Place Order
+        </button>
+      <% end %>
+    </div>
+  </div>
+
+  <div>
+    <h2 style="margin-bottom: 20px;">Order Summary</h2>
+    <div class="card">
+      <table>
+        <tbody>
+          <% @cart_items.each do |item| %>
+            <tr>
+              <td>
+                <%= item[:product].name %>
+                <br><span class="text-muted"><%= item[:label] %> &times; <%= item[:qty] %></span>
+              </td>
+              <td class="text-right">$<%= "%.2f" % (item[:price_cents] * item[:qty] / 100.0) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td><strong>Total</strong></td>
+            <td class="text-right cart-total" data-total-cents="<%= @total_cents %>">
+              <strong>$<%= "%.2f" % (@total_cents / 100.0) %></strong>
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</div>

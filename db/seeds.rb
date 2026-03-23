@@ -543,10 +543,22 @@ create_product(
   ]
 )
 
+# ============================================================
+# Customer user for storefront / connector testing
+# ============================================================
+customer_email    = ENV.fetch("CUSTOMER_EMAIL", "buyer@hotel.test")
+customer_password = ENV.fetch("CUSTOMER_PASSWORD", "testpass123")
+
+customer = Spree::User.find_or_initialize_by(email: customer_email)
+customer.password = customer_password
+customer.password_confirmation = customer_password
+customer.save!
+puts "  Customer:  #{customer_email} / #{customer_password}"
+
 puts "\n\n== Done! =="
 puts "  Products:  #{Spree::Product.count}"
 puts "  Variants:  #{Spree::Variant.count}"
 puts "  Taxons:    #{Spree::Taxon.count}"
 puts "  Store:     #{store.name} (#{store.url})"
 puts "\nAdmin login: #{ENV.fetch('ADMIN_EMAIL', 'spree@example.com')} / #{ENV.fetch('ADMIN_PASSWORD', 'spree123')}"
-puts "Storefront:  https://#{store.url}"
+puts "Storefront:  /login → #{customer_email} / #{customer_password}"

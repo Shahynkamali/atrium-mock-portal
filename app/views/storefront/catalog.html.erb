@@ -1,0 +1,31 @@
+<h2 style="margin-bottom: 20px;">Product Catalog</h2>
+
+<div class="product-grid">
+  <% @products.each do |product| %>
+    <% master = product.master %>
+    <% price_cents = (master.price_in("CAD")&.amount.to_f * 100).round %>
+    <% category = product.taxons.first&.name || "Uncategorized" %>
+    <div class="card" data-product-id="<%= product.id %>"
+         data-sku="<%= master.sku %>"
+         data-category="<%= category %>">
+      <h3 data-name="<%= product.name %>"><%= product.name %></h3>
+      <p class="text-muted"><code><%= master.sku %></code></p>
+      <p class="text-muted"><%= category %></p>
+      <p class="product-price" data-price-cents="<%= price_cents %>">
+        $<%= "%.2f" % (price_cents / 100.0) %>
+      </p>
+      <a href="/products/<%= product.id %>" class="btn btn-primary btn-sm" style="margin-top: 8px;">
+        View Details
+      </a>
+    </div>
+  <% end %>
+</div>
+
+<div class="pagination">
+  <% if @page > 1 %>
+    <a href="/catalog?page=<%= @page - 1 %>" class="btn btn-primary btn-sm">&laquo; Previous</a>
+  <% end %>
+  <% if @has_next %>
+    <a href="/catalog?page=<%= @page + 1 %>" class="btn btn-primary btn-sm" data-next-page="true">Next &raquo;</a>
+  <% end %>
+</div>
