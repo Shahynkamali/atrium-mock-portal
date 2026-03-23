@@ -83,13 +83,12 @@ end
 # Helper
 # ============================================================
 def set_variant_price(variant, amount)
+  # Spree auto-creates a USD price with nil amount — delete it
+  variant.prices.where(amount: nil).delete_all
+  variant.prices.where.not(currency: "CAD").delete_all
   p = variant.prices.find_or_initialize_by(currency: "CAD")
   p.amount = amount
   p.save!
-rescue ActiveRecord::RecordInvalid
-  # Fallback: delete all prices and create fresh
-  variant.prices.delete_all
-  variant.prices.create!(currency: "CAD", amount: amount)
 end
 
 def create_product(name:, slug:, sku:, description:, price:, taxon:,
