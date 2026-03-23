@@ -13,14 +13,6 @@ Rails.application.config.active_job.queue_adapter = :test
 
 puts "\n== Seeding hotel supply catalog =="
 
-at_exit do
-  if $!
-    puts "\n\n== SEED ERROR =="
-    puts "#{$!.class}: #{$!.message}"
-    puts $!.backtrace&.first(10)&.join("\n")
-  end
-end
-
 # ============================================================
 # Store
 # ============================================================
@@ -108,8 +100,8 @@ def create_product(name:, slug:, sku:, description:, price:, taxon:,
     available_on:      Time.current,
     status:            "active"
   )
-  product.taxons << taxon
-  product.stores << store
+  product.taxons << taxon unless product.taxons.include?(taxon)
+  product.stores << store unless product.stores.include?(store)
 
   # Master variant — always required
   product.master.sku = sku
