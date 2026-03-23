@@ -8,12 +8,18 @@
 # Step 1: Core Spree infrastructure (zones, countries, currencies, admin user)
 Spree::Core::Engine.load_seed if defined?(Spree::Core)
 
-# Suppress Spree event callbacks during seeding (they enqueue Sidekiq jobs
-# that aren't needed during build and slow down the seed significantly).
-Spree::Product.skip_callback(:commit, :after, :fire_event) rescue nil
-Spree::Variant.skip_callback(:commit, :after, :fire_event) rescue nil
+# Silence Sidekiq job enqueuing during seed (worker not running on free tier)
+Rails.application.config.active_job.queue_adapter = :test
 
 puts "\n== Seeding hotel supply catalog =="
+
+at_exit do
+  if $!
+    puts "\n\n== SEED ERROR =="
+    puts "#{$!.class}: #{$!.message}"
+    puts $!.backtrace&.first(10)&.join("\n")
+  end
+end
 
 # ============================================================
 # Store
