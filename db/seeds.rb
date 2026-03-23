@@ -17,6 +17,10 @@ Rails.application.config.active_job.queue_adapter = :test
 stale = Spree::Price.where(amount: nil).delete_all
 puts "  Cleaned up #{stale} stale nil-amount prices" if stale.positive?
 
+# Clean up orphaned option values (created without variants in previous partial runs)
+orphaned = Spree::OptionValue.left_joins(:variants).where(spree_variants: { id: nil }).delete_all
+puts "  Cleaned up #{orphaned} orphaned option values" if orphaned.positive?
+
 puts "\n== Seeding hotel supply catalog =="
 
 # ============================================================
@@ -129,8 +133,10 @@ def create_product(name:, slug:, sku:, description:, price:, taxon:,
 
     variants.each do |v|
       ov = option_value(option_type, v[:label])
-      var = product.variants.create!(sku: v[:sku], track_inventory: true)
-      # Direct insert to avoid OptionValue validation ("variants can't be blank")
+      # Build + save without validation to bypass Spree 5's cascading checks
+      var = product.variants.new(sku: v[:sku], track_inventory: true)
+      var.save!(validate: false)
+      # Direct SQL for option_value join (avoids OptionValue "variants can't be blank")
       ActiveRecord::Base.connection.execute(
         "INSERT INTO spree_option_value_variants (variant_id, option_value_id) " \
         "VALUES (#{var.id}, #{ov.id}) ON CONFLICT DO NOTHING"
