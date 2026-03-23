@@ -105,7 +105,14 @@ def create_product(name:, slug:, sku:, description:, price:, taxon:,
                    shipping_category:, tax_category:, store:,
                    option_type: nil, variants: [])
 
-  if Spree::Product.find_by(slug: slug)
+  existing = Spree::Product.find_by(slug: slug)
+  if existing
+    # Ensure prices exist for products created in previous partial runs
+    set_variant_price(existing.master, price) unless existing.master.prices.where(currency: "CAD").where.not(amount: nil).exists?
+    existing.variants.each do |var|
+      v_data = variants.find { |v| v[:sku] == var.sku }
+      set_variant_price(var, v_data[:price]) if v_data && !var.prices.where(currency: "CAD").where.not(amount: nil).exists?
+    end
     print "."
     return
   end
