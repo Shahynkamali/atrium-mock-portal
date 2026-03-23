@@ -82,6 +82,16 @@ end
 # ============================================================
 # Helper
 # ============================================================
+def set_variant_price(variant, amount)
+  p = variant.prices.find_or_initialize_by(currency: "CAD")
+  p.amount = amount
+  p.save!
+rescue ActiveRecord::RecordInvalid
+  # Fallback: delete all prices and create fresh
+  variant.prices.delete_all
+  variant.prices.create!(currency: "CAD", amount: amount)
+end
+
 def create_product(name:, slug:, sku:, description:, price:, taxon:,
                    shipping_category:, tax_category:, store:,
                    option_type: nil, variants: [])
@@ -106,8 +116,7 @@ def create_product(name:, slug:, sku:, description:, price:, taxon:,
   # Master variant — always required
   master = product.master
   master.update!(sku: sku)
-  master.prices.find_or_create_by!(currency: "CAD") { |p| p.amount = price }
-  master.prices.find_by(currency: "CAD")&.update!(amount: price)
+  set_variant_price(master, price)
   master.stock_items.each { |si| si.set_count_on_hand(500) }
 
   if variants.any? && option_type
@@ -115,13 +124,9 @@ def create_product(name:, slug:, sku:, description:, price:, taxon:,
 
     variants.each do |v|
       ov = option_value(option_type, v[:label])
-      var = product.variants.create!(
-        sku:          v[:sku],
-        track_inventory: true
-      )
+      var = product.variants.create!(sku: v[:sku], track_inventory: true)
       var.option_values << ov
-      var.prices.find_or_create_by!(currency: "CAD") { |p| p.amount = v[:price] }
-      var.prices.find_by(currency: "CAD")&.update!(amount: v[:price])
+      set_variant_price(var, v[:price])
       var.stock_items.each { |si| si.set_count_on_hand(v.fetch(:stock, 500)) }
     end
   end
